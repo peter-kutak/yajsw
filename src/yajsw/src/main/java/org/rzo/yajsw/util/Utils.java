@@ -22,8 +22,11 @@ import java.net.Inet4Address;
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
+import org.apache.commons.configuration2.BaseConfiguration;
+import org.apache.commons.configuration2.Configuration;
 import org.rzo.yajsw.wrapper.WrappedProcess;
 import org.rzo.yajsw.wrapper.WrappedService;
 
@@ -44,6 +47,18 @@ public class Utils
 	public Utils(WrappedService service)
 	{
 		_service = service;
+	}
+	
+	public static Configuration toBaseConfiguration(Configuration conf)
+	{
+		Configuration result = new BaseConfiguration();
+		if (conf != null && conf.size() > 0)
+		for (Iterator<String> it=conf.getKeys(); it.hasNext(); )
+		{
+			String key = it.next();
+			result.addProperty(key, conf.getProperty(key));
+		}
+		return result;
 	}
 
 	public String inquireCLI(String message) throws IOException

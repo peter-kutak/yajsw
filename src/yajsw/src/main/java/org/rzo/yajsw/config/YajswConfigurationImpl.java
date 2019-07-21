@@ -53,6 +53,7 @@ import org.rzo.yajsw.script.GroovyScript;
 import org.rzo.yajsw.util.CaseInsensitiveMap;
 import org.rzo.yajsw.util.CommonsLoggingAdapter;
 import org.rzo.yajsw.util.ConfigurationLoggingAdapter;
+import org.rzo.yajsw.util.Utils;
 import org.rzo.yajsw.util.VFSUtils;
 
 // TODO: Auto-generated Javadoc
@@ -202,8 +203,9 @@ public class YajswConfigurationImpl extends CompositeConfiguration implements
 			if (debug)
 				log.debug("added system configuration ");
 		}
-		 _systemConfiguration.addConfiguration(new
-		 EnvironmentConfiguration());
+		// EnvironmentConfiguration will throw a read-only exception -> use BaseConfiguration
+		 _systemConfiguration.addConfiguration(Utils.toBaseConfiguration(new
+		 EnvironmentConfiguration()));
 		/*
 		 * Map osEnv = OperatingSystem.instance().getOSEnv();
 		_systemConfiguration.addConfiguration(new MapConfiguration(
