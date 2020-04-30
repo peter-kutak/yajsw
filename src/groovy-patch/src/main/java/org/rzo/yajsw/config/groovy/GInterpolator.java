@@ -24,6 +24,7 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 	InternalLogger			log						= InternalLoggerFactory.getInstance(this.getClass().getName());
 	Map<String, String>             _fromBinding = new HashMap<String, String>();
 	volatile MyKeyStoreInterface _ks = null;
+	byte _level = 0;
 
 	public GInterpolator(Configuration conf, boolean cache, String[] imports, Map utils)
 	{
@@ -74,11 +75,18 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 		{
 			int r = getExpression(result, i + 2);
 			String expression = result.substring(i + 2, r);
+			_level++;
 			String eval = evaluate(expression);
+			_level--;
 			String p1 = result.substring(0, i);
 			String p2 = result.substring(r + 1);
 			result = p1 + eval + p2;
 			i = result.lastIndexOf("${");
+			if (i != -1 && value != null && result != null && value.equals(result))
+			{
+				result = "?unresolved?cycle";
+				i = -1;
+			}
 		}
 		if (_cache != null)
 			_cache.put(value, result);
@@ -119,6 +127,8 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 
 	private String evaluate(String value)
 	{
+		if (_level > 10)
+			return "?unresolved?recursion>10?";
 		String result = null;
 		Exception caught = null;
 		try
@@ -184,6 +194,11 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 	public Map<String, String> getUsedEnvVars()
 	{
 		return ((ConfigurationBinding)getBinding()).getUsedEnvVars();
+	}
+	
+	public static void main(String[] args) {
+		GInterpolator gi = new GInterpolator(null);
+		gi.interpolate("${relativeRAM.invoke('calc',15)}");
 	}
 
 }
