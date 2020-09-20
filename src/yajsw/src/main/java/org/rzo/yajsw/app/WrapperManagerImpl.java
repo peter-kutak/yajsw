@@ -56,9 +56,13 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -215,6 +219,8 @@ public class WrapperManagerImpl implements WrapperManager, Constants,
 	volatile Runnable _shutdownListener;
 	
 	volatile long _pingTime = System.currentTimeMillis();
+
+	BlockingQueue<String> _keystoreResult = new ArrayBlockingQueue(1);
 	
 	private boolean _wrapperPingCheckAck = false;
 
@@ -1462,6 +1468,11 @@ public class WrapperManagerImpl implements WrapperManager, Constants,
 			{
 				_pingTime = System.currentTimeMillis();
 			}
+			else if (msg.getCode() == Constants.WRAPPER_MSG_KEYSTORE_RESULT)
+			{
+				System.out.println("received keystore value");
+				_keystoreResult.add(msg.getMessage());
+			}
 		}
 
 		@Override
@@ -1943,6 +1954,30 @@ public class WrapperManagerImpl implements WrapperManager, Constants,
 			_session.close();
 			_session = null;
 		}
+
+	}
+	
+	public String keystore(String key) throws InterruptedException
+	{
+		String result = null;
+		System.out.println("get keystore for "+key);
+		int i = 0;
+		while (_session == null && !_stopping && i++ < 10)
+			Thread.sleep(1000);
+		if (_session != null && !_stopping)
+		try
+		{
+			_session.writeAndFlush(new Message(Constants.WRAPPER_MSG_KEYSTORE,
+					key));
+			result = _keystoreResult.poll(5000, TimeUnit.MILLISECONDS);			
+		}
+		catch (Exception ex)
+		{
+			ex.printStackTrace();
+		}
+		else
+			System.out.println("no session");
+		return result;
 
 	}
 

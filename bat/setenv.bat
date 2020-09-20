@@ -6,6 +6,17 @@ set wrapper_home=%~dp0/..
 
 rem default java exe for running the wrapper
 rem note this is not the java exe for running the application. the exe for running the application is defined in the wrapper configuration file
+if "%JAVA_HOME%" == "" 
+(
+ set java_exe="java"
+ set javaw_exe="javaw"
+ )
+else 
+(
+ set java_exe="%JAVA_HOME%\bin\java"
+ set javaw_exe="%JAVA_HOME%\bin\javaw"
+)
+
 set java_exe="java"
 set javaw_exe="javaw"
 
@@ -15,7 +26,8 @@ set wrapper_app_jar="%wrapper_home%/wrapperApp.jar"
 
 rem get java version
 for /f "delims=" %%j in ('%java_exe% -fullversion 2^>^&1') do @set "jver=%%j"
-set java_version=%jver:~19,2%
+if "%jver:~0,7%" == "openjdk" (set java_version=%jver:~22,2%) 
+else ( set java_version=%jver:~19,2% )
 
 rem setting java options for wrapper process. depending on the scripts used, the wrapper may require more memory.
 if "%java_version%" == "1." (
@@ -29,7 +41,7 @@ set wrapper_bat="%wrapper_home%/bat/wrapper.bat"
 set wrapperw_bat="%wrapper_home%/bat/wrapperW.bat"
 
 rem configuration file used by all bat files
-set conf_file="%wrapper_home%/conf/wrapper.conf"
+set conf_file=%wrapper_home%/conf/wrapper.conf
 
 rem default configuration used in genConfig
 set conf_default_file="%wrapper_home%/conf/wrapper.conf.default"

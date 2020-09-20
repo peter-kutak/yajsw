@@ -121,7 +121,8 @@ public interface Constants
 	public static final byte WRAPPER_MSG_SERVICE_CONTROL_CODE = (byte) 114;
 
 	/** The Constant WRAPPER_MSG_PROPERTIES. */
-	public static final byte WRAPPER_MSG_PROPERTIES = (byte) 115;
+	public static final byte WRAPPER_MSG_KEYSTORE = (byte) 115;
+	public static final byte WRAPPER_MSG_KEYSTORE_RESULT = (byte) 122;
 
 	/** The Constant WRAPPER_MSG_OKKEY. */
 	public static final byte WRAPPER_MSG_OKKEY = (byte) 116;

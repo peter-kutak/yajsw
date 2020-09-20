@@ -427,6 +427,8 @@ public class YajswConfigurationImpl extends CompositeConfiguration implements
 		{
 			// e.printStackTrace();
 			log.warn("WARNING: could not load configuration groovy interpolator");
+			log.warn("setting to variable interpolation instead");
+			result = new VarInterpolator(conf, b, object, utils);
 		}
 		return result;
 	}

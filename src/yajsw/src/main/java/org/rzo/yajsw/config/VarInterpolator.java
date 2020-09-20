@@ -1,9 +1,4 @@
-package org.rzo.yajsw.config.groovy;
-
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
-import io.netty.util.internal.logging.InternalLogger;
-import io.netty.util.internal.logging.InternalLoggerFactory;
+package org.rzo.yajsw.config;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,11 +8,12 @@ import org.apache.commons.configuration2.interpol.ConfigurationInterpolator;
 import org.rzo.yajsw.config.YajswConfigurationInterpolator;
 import org.rzo.yajsw.util.MyKeyStoreInterface;
 
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
 
-public class GInterpolator extends ConfigurationInterpolator implements YajswConfigurationInterpolator
+
+public class VarInterpolator extends ConfigurationInterpolator implements YajswConfigurationInterpolator
 {
-	Binding			_binding;
-	GroovyShell		_shell;
 	Configuration	_conf;
 	Map				_cache		= null;
 	String[]		_imports	= null;
@@ -25,17 +21,17 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 	Map<String, String>             _fromBinding = new HashMap<String, String>();
 	volatile MyKeyStoreInterface _ks = null;
 	byte _level = 0;
+	private ConfigurationBinding _binding;
 
-	public GInterpolator(Configuration conf, boolean cache, String[] imports, Map utils)
+	public VarInterpolator(Configuration conf, boolean cache, String[] imports, Map utils)
 	{
 		_conf = conf;
 		_binding = new ConfigurationBinding(conf, utils);
-		_shell = new GroovyShell(_binding);
 		setCache(cache);
 		_imports = imports;
 	}
 
-	public GInterpolator(Configuration conf)
+	public VarInterpolator(Configuration conf)
 	{
 		this(conf, false, null, null);
 	}
@@ -94,7 +90,7 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 
 	}
 
-	private String getFromKeystore(String key) throws Exception
+	public String getFromKeystore(String key) throws Exception
 	{
 		MyKeyStoreInterface ks = getKeyStore();
 		String result =  new String(ks.get(key));
@@ -157,12 +153,7 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 		if (result == null)
 			try
 			{
-				if (_imports != null)
-					for (String im : _imports)
-					{
-						value = "import " + im + "\n" + value;
-					}
-				result = _shell.evaluate(value).toString();
+				result = _binding.getVariable(value).toString();
 			}
 			catch (Exception ex)
 			{
@@ -181,11 +172,6 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 
 	}
 	
-	public Object getBinding()
-	{
-		return _binding;
-	}
-	
 	public Map<String, String> getFromBinding()
 	{
 		return _fromBinding;
@@ -193,12 +179,18 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 	
 	public Map<String, String> getUsedEnvVars()
 	{
-		return ((ConfigurationBinding)getBinding()).getUsedEnvVars();
+		return _binding.getUsedEnvVars();
 	}
 	
 	public static void main(String[] args) {
-		GInterpolator gi = new GInterpolator(null);
-		gi.interpolate("${relativeRAM.invoke('calc',15)}");
+		VarInterpolator gi = new VarInterpolator(null);
+		Object r = gi.interpolate("${relativeRAM.invoke('calc',15)}");
+		System.out.println(r);
+	}
+
+	@Override
+	public Object getBinding() {
+		return _binding;
 	}
 
 }

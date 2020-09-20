@@ -130,7 +130,7 @@ public class ConfigGenerator
 		 * monitoredhost.getMonitoredVm(vmidentifier, 0); return monitoredvm !=
 		 * null; } catch (Exception e) { // e.printStackTrace(); } return false;
 		 */
-		return p.getCommand().contains("java");
+		return p.getCommand().toLowerCase().contains("java");
 	}
 
 	private static void createImageConfigFile(Process p, File input, File output)

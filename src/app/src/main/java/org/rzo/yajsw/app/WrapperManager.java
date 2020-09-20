@@ -98,4 +98,6 @@ public interface WrapperManager
 	public void setShutdownListener(Runnable listener);
 
 	public void warn(String string);
+	
+	public String keystore(String key) throws InterruptedException;
 }
