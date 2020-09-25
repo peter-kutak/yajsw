@@ -88,7 +88,7 @@ public class PosixJavaHome implements JavaHome
 				if (javaFiles[idx] != null)
 				{
 					javaName = ((loop == 0) ? javaFiles[idx] : System
-							.getProperty("JAVA_HOME", "")
+							.getProperty("java.home", "")
 							+ File.separator
 							+ "bin" + File.separator + javaFiles[idx]);
 					File fJavaTmp = new File(javaName);
