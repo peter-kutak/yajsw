@@ -63,6 +63,7 @@ public interface Constants
 	public static final String DEFAULT_DAEMON_RUN_LEVEL_DIR = "rc5.d";
 	public static final String DEFAULT_DAEMON_TEMPLATE = "conf/daemon.vm";
 	public static final String DEFAULT_DAEMON_DIR = "/etc/init.d";
+	public static final String DEFAULT_SYSTEMD_DIR = "/etc/systemd/system";
 	public static final String DEFAULT_DAEMON_PID_DIR = "/var/run";
 	public static final String DEFAULT_DAEMON_K_ORDER = "99";
 	public static final String DEFAULT_DAEMON_S_ORDER = "99";
