@@ -29,6 +29,8 @@ dependencies {
     compile group: 'velocity', 						name: 'velocity', 								version: "$velocity_version"
     compile group: 'yacron4j', 						name: 'yacron4j', 								version: "$yacron4j_version"
     compile group: 'joda-time', 					name: 'joda-time', 								version: "$joda_time_version"
+    compile group: 'sigar', 					name: 'sigar', 								version: "$sigar_version"
+    compile group: 'sigar-lib', 					name: 'sigar-lib', 								version: "$sigar_version"
 }
 
 println '---------------------------'

@@ -40,10 +40,14 @@ import jnacontrib.jna.Advapi32;
 import jnacontrib.jna.Options;
 
 import org.apache.commons.collections.map.MultiValueMap;
+import org.gridkit.lab.sigar.SigarFactory;
+import org.hyperic.sigar.SigarException;
+import org.hyperic.sigar.SigarProxy;
 import org.rzo.yajsw.io.CyclicBufferFileInputStream;
 import org.rzo.yajsw.io.CyclicBufferFilePrintStream;
 import org.rzo.yajsw.os.AbstractProcess;
 import org.rzo.yajsw.os.Process;
+import org.rzo.yajsw.os.SigarAccessor;
 import org.rzo.yajsw.os.ms.win.w32.WindowsXPProcess.MyAdvapi.TOKEN_PRIVILEGES;
 import org.rzo.yajsw.os.ms.win.w32.WindowsXPProcess.MyKernel32.MEMORY_BASIC_INFORMATION;
 import org.rzo.yajsw.os.ms.win.w32.WindowsXPProcess.MyKernel32.PROCESSENTRY32;
@@ -1823,6 +1827,8 @@ public class WindowsXPProcess extends AbstractProcess
 	volatile Pointer errReadPipe = null;
 
 	volatile int _isElevated = -1; // 1 = true, 0 = false;
+	
+	SigarAccessor sigar = SigarAccessor.instance();
 
 	/**
 	 * Gets the process.
@@ -3711,10 +3717,15 @@ public class WindowsXPProcess extends AbstractProcess
 	 */
 	public int getCurrentCpu()
 	{
-		if (!isRunning() || getCpuCounter() == null)
+		if (!isRunning() || sigar == null)
 			return -1;
-		PdhCounter c = getCpuCounter();
-		return c.getIntValue();
+		try {
+			return (int) sigar.getProcCpu(_pid);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return -1;
 	}
 
 	/**
@@ -3789,10 +3800,15 @@ public class WindowsXPProcess extends AbstractProcess
 	 */
 	public int getCurrentPageFaults()
 	{
-		if (!isRunning())
+		if (!isRunning() || sigar == null)
 			return -1;
-		PdhCounter c = getPfCounter();
-		return c.getIntValue();
+		try {
+			return (int) sigar.getPageFaults(_pid);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return -1;
 	}
 
 	/**
@@ -3827,8 +3843,10 @@ public class WindowsXPProcess extends AbstractProcess
 	 */
 	public static void main(String[] args) throws InterruptedException
 	{
-		int pid = 15036;
-		 WindowsXPProcess.getProcess(pid);
+		int pid = 5688;
+		 Process p = WindowsXPProcess.getProcess(pid);
+		 System.out.println(p.getCurrentCpu());
+		 System.out.println(p.getCommand());
 		/*
 		 * WindowsXPProcess[] p = new WindowsXPProcess[1]; for (int i = 0; i <
 		 * p.length; i++) { p[i] = new WindowsXPProcess(); //
@@ -4096,10 +4114,15 @@ public class WindowsXPProcess extends AbstractProcess
 
 	public int getCurrentHandles()
 	{
-		if (!isRunning() || getHandlesCounter() == null)
+		if (!isRunning() || sigar == null)
 			return -1;
-		PdhCounter c = getHandlesCounter();
-		return c.getIntValue();
+		try {
+			return (int) sigar.getProcFd(_pid);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return -1;
 	}
 
 	private PdhCounter getHandlesCounter()
