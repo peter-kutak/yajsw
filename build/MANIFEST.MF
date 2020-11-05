@@ -16,8 +16,6 @@ Class-Path-Wrapper-Core:
  ./lib/core/commons/commons-cli-1.4.jar
   
 Class-Path-Wrapper-Extended: 
- ./lib/extended/sigar/sigar-lib-1.6.4.jar 
- ./lib/extended/sigar/sigar-1.6.4.jar 
  ./lib/extended/groovy/groovy-2.5.7.jar 
  ./lib/extended/commons/commons-httpclient-4.5.12.jar 
  ./lib/extended/commons/commons-codec-1.15.jar 
