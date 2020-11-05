@@ -1,18 +1,12 @@
-	yajsw-stable-12.14
+yajsw-stable-12.15 
 
- 
-    Tested with java 12 on win 10 and centos 6
-    Update to gradle 5.4.1, NOTE: build now requires java 8 for gradle and java 7 for compile
-    Upgrade commons: cli 1.4, configurtion2 2.5, io 2.6, lang3 3.9, vfs2 2.3
-    Upgrade to latest netty 4.1.36
-    Merge commit '4ee1a695981821bf253d70cbc5f566e1161b0bbf'
-        Updating static Loggers to use InternalLogger
-        Adding Groovy runtime classes with static logging
-    Avoid WARNING: An illegal reflective access operation has occurred in groovy. NOTE: workaround until availability of groovy 3.0.0 where this should be resolved.
-    Upgrade to latest jna 5.3.1
-    Upgrade to latest stable groovy-2.5.7
-    Bug: random hard kill on restart
-    Merge Request #8: Relativize classpath entries wrt working directory
-        NOTE: new configuration property: wrapper.java.app.relativize_classpath
+    * bug: state change shell script not executed
+    * new: posix: support for systemd per default @see docs for details.
+    * bug: posix: use java prop java.home instead of java_home
+    * new: WRAPPER_MANAGER.keystore(key): access keystore from within the application.
+    * bug: evaluating property x = ${x} results in recursion overflow
+    * bug: read-only exception in configuration2.EnvironmentConfiguration @see https://sourceforge.net/p/yajsw/support-requests/38/
+    * change: use sigar to get subprocess cpu, memory, handles
+    * change: upgrade vulnerable libs
 
-
+Note: this is the last release to support java 1.7. The next relase will support JDK8 - JDK 14
