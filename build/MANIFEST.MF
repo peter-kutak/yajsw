@@ -18,7 +18,7 @@ Class-Path-Wrapper-Core:
 Class-Path-Wrapper-Extended: 
  ./lib/extended/groovy/groovy-patch.jar 
  ./lib/extended/groovy/groovy-2.5.14.jar 
- ./lib/extended/commons/commons-httpclient-4.5.12.jar 
+ ./lib/extended/commons/commons-httpclient-4.5.13.jar 
  ./lib/extended/commons/commons-codec-1.15.jar 
  ./lib/extended/commons/commons-net-3.2.jar 
  ./lib/extended/regex/automaton-1.11.jar 

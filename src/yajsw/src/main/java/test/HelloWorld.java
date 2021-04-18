@@ -55,6 +55,12 @@ public class HelloWorld
 		}
 
 	}
+	
+	private static void spin(int milliseconds) {
+	    long sleepTime = milliseconds*1000000L; // convert to nanoseconds
+	    long startTime = System.nanoTime();
+	    while ((System.nanoTime() - startTime) < sleepTime) {}
+	}
 
 	public static void simulateDeadlock()
 	{
@@ -404,6 +410,17 @@ public class HelloWorld
 							System.out.println("exiting 1");
 							System.exit(257);
 						}
+						if (line.contains("spin"))
+						{
+							new Thread(new Runnable() {
+								public void run() {
+									System.out.println("+spin");
+									spin(10000);
+									System.out.println("-spin");
+								}
+							}).start();
+						}
+
 					}
 				}
 				catch (Exception ex)

@@ -40,14 +40,10 @@ import jnacontrib.jna.Advapi32;
 import jnacontrib.jna.Options;
 
 import org.apache.commons.collections.map.MultiValueMap;
-import org.gridkit.lab.sigar.SigarFactory;
-import org.hyperic.sigar.SigarException;
-import org.hyperic.sigar.SigarProxy;
 import org.rzo.yajsw.io.CyclicBufferFileInputStream;
 import org.rzo.yajsw.io.CyclicBufferFilePrintStream;
 import org.rzo.yajsw.os.AbstractProcess;
 import org.rzo.yajsw.os.Process;
-import org.rzo.yajsw.os.SigarAccessor;
 import org.rzo.yajsw.os.ms.win.w32.WindowsXPProcess.MyAdvapi.TOKEN_PRIVILEGES;
 import org.rzo.yajsw.os.ms.win.w32.WindowsXPProcess.MyKernel32.MEMORY_BASIC_INFORMATION;
 import org.rzo.yajsw.os.ms.win.w32.WindowsXPProcess.MyKernel32.PROCESSENTRY32;
@@ -1828,8 +1824,6 @@ public class WindowsXPProcess extends AbstractProcess
 
 	volatile int _isElevated = -1; // 1 = true, 0 = false;
 	
-	SigarAccessor sigar = SigarAccessor.instance();
-
 	/**
 	 * Gets the process.
 	 * 
@@ -3717,14 +3711,9 @@ public class WindowsXPProcess extends AbstractProcess
 	 */
 	public int getCurrentCpu()
 	{
-		if (!isRunning() || sigar == null)
-			return -1;
-		try {
-			return (int) sigar.getProcCpu(_pid);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		PdhCounter c = getCpuCounter();
+		if (c != null)
+			return c.getIntValue();
 		return -1;
 	}
 
@@ -3800,14 +3789,9 @@ public class WindowsXPProcess extends AbstractProcess
 	 */
 	public int getCurrentPageFaults()
 	{
-		if (!isRunning() || sigar == null)
-			return -1;
-		try {
-			return (int) sigar.getPageFaults(_pid);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		PdhCounter counter = getPfCounter();
+		if (counter != null)
+			return counter.getIntValue();
 		return -1;
 	}
 
@@ -4114,14 +4098,9 @@ public class WindowsXPProcess extends AbstractProcess
 
 	public int getCurrentHandles()
 	{
-		if (!isRunning() || sigar == null)
-			return -1;
-		try {
-			return (int) sigar.getProcFd(_pid);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		PdhCounter counter = getHandlesCounter();
+		if (counter != null)
+			return counter.getIntValue();
 		return -1;
 	}
 

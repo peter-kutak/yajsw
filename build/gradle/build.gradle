@@ -9,7 +9,6 @@ ext {
 	extendedLibsDir = new File("$projectHome/lib/extended").getAbsolutePath()
 // dependency versions
 
-    sigar_version                   = '1.6.4'
 	commons_cli_version 			= '1.4'
 	commons_collections_version 	= '3.2.2'
 	commons_configuration_version	= '2.7'
@@ -58,8 +57,7 @@ repositories {
     "$extendedLibsDir/abeille",
     "$extendedLibsDir/jgoodies",
     "$extendedLibsDir/glazedlists",
-    "$extendedLibsDir/velocity",
-    "$extendedLibsDir/sigar"
+    "$extendedLibsDir/velocity"
     
     }
 	}
