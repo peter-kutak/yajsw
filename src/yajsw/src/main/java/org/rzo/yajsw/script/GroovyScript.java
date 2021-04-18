@@ -165,7 +165,7 @@ public class GroovyScript extends AbstractScript
 	 * java.lang.String, java.lang.String, java.lang.String, java.lang.String,
 	 * java.lang.String, java.lang.Object)
 	 */
-	synchronized public Object execute(String line)
+	public Object execute(String line)
 	{
 		Object result = null;
 
@@ -206,7 +206,10 @@ public class GroovyScript extends AbstractScript
 		}
 		try
 		{
-			result = _script.invokeMethod("run", new Object[] {});
+			synchronized (_script) 
+			{
+				result = _script.invokeMethod("run", new Object[] {});
+			}
 		}
 		catch (Throwable e)
 		{
