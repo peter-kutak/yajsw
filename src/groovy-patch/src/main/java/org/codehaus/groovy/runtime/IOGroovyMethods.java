@@ -81,8 +81,7 @@ import static org.codehaus.groovy.runtime.DefaultGroovyMethods.callClosureForLin
 public class IOGroovyMethods extends DefaultGroovyMethodsSupport {
 
     //private static final Logger LOG = Logger.getLogger(IOGroovyMethods.class.getName());
-	private static final InternalLogger LOG = InternalLoggerFactory.getInstance(IOGroovyMethods.class.getName());
-
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(IOGroovyMethods.class.getName());
 
     /**
      * Overloads the leftShift operator for Writer to allow an object to be written

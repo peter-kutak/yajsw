@@ -27,6 +27,7 @@ dependencies {
     compile group: 'abeille', 						name: 'formsrt', 									version: "$formsrt_version"
     compile group: 'forms', 							name: 'forms', 										version: "$forms_version"
     compile group: 'velocity', 						name: 'velocity', 								version: "$velocity_version"
+    compile group: 'slf4j', 						name: 'slf4j', 								version: "$slf4j_version"
     compile group: 'yacron4j', 						name: 'yacron4j', 								version: "$yacron4j_version"
     compile group: 'joda-time', 					name: 'joda-time', 								version: "$joda_time_version"
     compile group: 'sigar', 					name: 'sigar', 								version: "$sigar_version"

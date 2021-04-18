@@ -4,10 +4,12 @@ import groovy.lang.Binding;
 import groovy.lang.GroovyShell;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.logging.SimpleLogger;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.interpol.ConfigurationInterpolator;
 import org.rzo.yajsw.config.YajswConfigurationInterpolator;
@@ -21,7 +23,7 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 	Configuration	_conf;
 	Map				_cache		= null;
 	String[]		_imports	= null;
-	InternalLogger			log						= InternalLoggerFactory.getInstance(this.getClass().getName());
+	InternalLogger			log						= new SimpleLogger();
 	Map<String, String>             _fromBinding = new HashMap<String, String>();
 	volatile MyKeyStoreInterface _ks = null;
 	byte _level = 0;
@@ -70,6 +72,7 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 		{
 			ex.printStackTrace();
 		}
+		
 		int i = result.lastIndexOf("${");
 		while (i != -1)
 		{
@@ -88,6 +91,8 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 				i = -1;
 			}
 		}
+		
+		//result = evaluate("\""+value.toString()+"\"");
 		if (_cache != null)
 			_cache.put(value, result);
 		return result;
@@ -172,8 +177,10 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 		{
 			result = "?unresolved?";
 			if (caught != null)
+			{
 				//log.warn("error evaluating "+value, caught);
 				log.warn("error evaluating "+value+" : "+caught.getMessage());
+			}
 			else
 				log.warn("error evaluating "+value);
 		}
@@ -197,8 +204,11 @@ public class GInterpolator extends ConfigurationInterpolator implements YajswCon
 	}
 	
 	public static void main(String[] args) {
-		GInterpolator gi = new GInterpolator(null);
+		Configuration conf = new BaseConfiguration();
+		conf.addProperty("os.name", "Windows 8.1");
+		GInterpolator gi = new GInterpolator(conf);
 		gi.interpolate("${relativeRAM.invoke('calc',15)}");
+		System.out.println(gi.interpolate("${\"${os.name}\".toLowerCase().startsWith('windows') ? 'has windows' : 'no windows'}"));
 	}
 
 }

@@ -28,6 +28,8 @@ import java.util.List;
 import java.util.Properties;
 //import java.util.logging.Logger;
 
+import org.codehaus.groovy.runtime.DefaultGroovyMethods;
+
 /**
  * A {@link SimpleExtensionModule} implementation which reads extension classes
  * metadata from META-INF.
@@ -36,8 +38,7 @@ import java.util.Properties;
  */
 public class MetaInfExtensionModule extends SimpleExtensionModule {
     //private static final Logger LOG = Logger.getLogger(MetaInfExtensionModule.class.getName());
-    private final static InternalLogger LOG = InternalLoggerFactory.getInstance(MetaInfExtensionModule.class.getName());
-
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(MetaInfExtensionModule.class.getName());
 
     public static final String MODULE_INSTANCE_CLASSES_KEY = "extensionClasses";
     public static final String MODULE_STATIC_CLASSES_KEY = "staticExtensionClasses";

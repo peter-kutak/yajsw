@@ -51,9 +51,8 @@ public class MetaClassHelper {
     public static final Object[] EMPTY_ARRAY = {};
     public static final Class[] EMPTY_TYPE_ARRAY = {};
     public static final Object[] ARRAY_WITH_NULL = {null};
-//    protected static final Logger LOG = Logger.getLogger(MetaClassHelper.class.getName());
+    //protected static final Logger LOG = Logger.getLogger(MetaClassHelper.class.getName());
     protected static final InternalLogger LOG = InternalLoggerFactory.getInstance(MetaClassHelper.class.getName());
-
     private static final int MAX_ARG_LEN = 12;
     private static final int
             OBJECT_SHIFT = 23, INTERFACE_SHIFT = 0,
@@ -813,12 +812,8 @@ public class MetaClassHelper {
     public static void logMethodCall(Object object, String methodName, Object[] arguments) {
         String className = getClassName(object);
         String logname = "methodCalls." + className + "." + methodName;
-        //Logger objLog = Logger.getLogger(logname);
         InternalLogger objLog = InternalLoggerFactory.getInstance(logname);
-
-        //if (!objLog.isLoggable(Level.FINER)) return;
-        if (!objLog.isTraceEnabled()) return;
-
+        if (!objLog.isInfoEnabled()) return;
         StringBuilder msg = new StringBuilder(methodName);
         msg.append("(");
         if (arguments != null) {
@@ -830,9 +825,7 @@ public class MetaClassHelper {
             }
         }
         msg.append(")");
-       // objLog.logp(Level.FINER, className, msg.toString(), "called from MetaClass.invokeMethod");
-        objLog.log(InternalLogLevel.TRACE, className, msg.toString(), "called from MetaClass.invokeMethod");
-
+        objLog.log(InternalLogLevel.INFO, className, msg.toString(), "called from MetaClass.invokeMethod");
     }
 
     protected static String normalizedValue(Object argument) {
@@ -926,10 +919,7 @@ public class MetaClassHelper {
     }
 
     public static boolean sameClasses(Class[] params) {
-        if (params.length != 0)
-            return false;
-
-        return true;
+        return params.length == 0;
     }
 
     public static boolean sameClasses(Class[] params, Object arg1) {
@@ -946,9 +936,7 @@ public class MetaClassHelper {
             return false;
 
         if (params[0] != getClassWithNullAndWrapper(arg1)) return false;
-        if (params[1] != getClassWithNullAndWrapper(arg2)) return false;
-
-        return true;
+        return params[1] == getClassWithNullAndWrapper(arg2);
     }
 
     public static boolean sameClasses(Class[] params, Object arg1, Object arg2, Object arg3) {
@@ -957,9 +945,7 @@ public class MetaClassHelper {
 
         if (params[0] != getClassWithNullAndWrapper(arg1)) return false;
         if (params[1] != getClassWithNullAndWrapper(arg2)) return false;
-        if (params[2] != getClassWithNullAndWrapper(arg3)) return false;
-
-        return true;
+        return params[2] == getClassWithNullAndWrapper(arg3);
     }
 
     public static boolean sameClasses(Class[] params, Object arg1, Object arg2, Object arg3, Object arg4) {
@@ -969,9 +955,7 @@ public class MetaClassHelper {
         if (params[0] != getClassWithNullAndWrapper(arg1)) return false;
         if (params[1] != getClassWithNullAndWrapper(arg2)) return false;
         if (params[2] != getClassWithNullAndWrapper(arg3)) return false;
-        if (params[3] != getClassWithNullAndWrapper(arg4)) return false;
-        
-        return true;
+        return params[3] == getClassWithNullAndWrapper(arg4);
     }
 
     public static boolean sameClass(Class[] params, Object arg) {

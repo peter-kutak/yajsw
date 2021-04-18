@@ -18,6 +18,7 @@ package org.rzo.yajsw.config;
 
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
+import io.netty.util.internal.logging.SimpleLogger;
 
 import java.io.File;
 import java.io.IOException;
@@ -65,8 +66,7 @@ public class YajswConfigurationImpl extends CompositeConfiguration implements
 {
 
 	/** The log. */
-	InternalLogger log = InternalLoggerFactory.getInstance(this.getClass()
-			.getName());
+	InternalLogger log = new SimpleLogger();
 
 	/** The _system properties. */
 	Configuration _systemProperties;

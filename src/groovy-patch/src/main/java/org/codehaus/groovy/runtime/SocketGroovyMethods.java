@@ -48,8 +48,7 @@ import java.net.Socket;
  */
 public class SocketGroovyMethods extends DefaultGroovyMethodsSupport {
     //private static final Logger LOG = Logger.getLogger(SocketGroovyMethods.class.getName());
-	private static final InternalLogger LOG = InternalLoggerFactory.getInstance(SocketGroovyMethods.class.getName());
-
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(SocketGroovyMethods.class.getName());
 
     /**
      * Passes the Socket's InputStream and OutputStream to the closure.  The

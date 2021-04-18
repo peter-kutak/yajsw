@@ -20,6 +20,7 @@ package org.codehaus.groovy.runtime;
 
 import groovy.lang.EmptyRange;
 import groovy.lang.IntRange;
+import groovy.lang.NumberRange;
 import groovy.lang.Range;
 import io.netty.util.internal.logging.InternalLogger;
 import io.netty.util.internal.logging.InternalLoggerFactory;
@@ -71,14 +72,16 @@ import java.util.concurrent.SynchronousQueue;
 public class DefaultGroovyMethodsSupport {
 
     //private static final Logger LOG = Logger.getLogger(DefaultGroovyMethodsSupport.class.getName());
-	private static final InternalLogger LOG = InternalLoggerFactory.getInstance(DefaultGroovyMethodsSupport.class.getName());
-
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(DefaultGroovyMethodsSupport.class.getName());
     private static final Object[] EMPTY_OBJECT_ARRAY = new Object[0];
 
     // helper method for getAt and putAt
     protected static RangeInfo subListBorders(int size, Range range) {
         if (range instanceof IntRange) {
-            return ((IntRange)range).subListBorders(size);
+            return ((IntRange) range).subListBorders(size);
+        }
+        if (range instanceof NumberRange) {
+            return ((NumberRange) range).subListBorders(size);
         }
         int from = normaliseIndex(DefaultTypeTransformation.intUnbox(range.getFrom()), size);
         int to = normaliseIndex(DefaultTypeTransformation.intUnbox(range.getTo()), size);

@@ -406,7 +406,7 @@ public class PosixService extends AbstractService implements Constants
 		try
 		{
 			File daemonTemplate = new File(_daemonTemplate);
-			VelocityEngine ve = new VelocityEngine();
+			VelocityEngine  ve = new VelocityEngine();
 			ve.setProperty(VelocityEngine.RESOURCE_LOADER, "file");
 			ve.setProperty("file.resource.loader.path",
 					daemonTemplate.getParent());

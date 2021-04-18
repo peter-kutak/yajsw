@@ -3390,7 +3390,7 @@ public abstract class AbstractWrappedProcess implements WrappedProcess,
 				// ioe.getMessage());
 				if (_debug > 2)
 					_goblerLog.log(Level.INFO, " gobler terminated " + _name
-							+ " " + ioe);
+							+ " ", ioe);
 			}
 			if (AbstractWrappedProcess.this._osProcess != null
 					&& _pid == AbstractWrappedProcess.this._osProcess.getPid()

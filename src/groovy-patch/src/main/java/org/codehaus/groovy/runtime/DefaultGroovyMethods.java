@@ -188,9 +188,8 @@ import java.util.regex.Pattern;
  */
 public class DefaultGroovyMethods extends DefaultGroovyMethodsSupport {
 
-//    private static final Logger LOG = Logger.getLogger(DefaultGroovyMethods.class.getName());
-	private static final InternalLogger LOG = InternalLoggerFactory.getInstance(DefaultGroovyMethods.class.getName());
-
+    //private static final Logger LOG = Logger.getLogger(DefaultGroovyMethods.class.getName());
+    private static final InternalLogger LOG = InternalLoggerFactory.getInstance(DefaultGroovyMethods.class.getName());
     private static final Integer ONE = 1;
     private static final BigInteger BI_INT_MAX = BigInteger.valueOf(Integer.MAX_VALUE);
     private static final BigInteger BI_INT_MIN = BigInteger.valueOf(Integer.MIN_VALUE);
@@ -562,7 +561,7 @@ public class DefaultGroovyMethods extends DefaultGroovyMethodsSupport {
             try {
                 props.put(mp.getName(), mp.getValue());
             } catch (Exception e) {
-                LOG.warn(self.getClass().getName(), "getProperty(" + mp.getName() + ")", e);
+                LOG.error(self.getClass().getName(), "getProperty(" + mp.getName() + ")", e);
             }
         }
         return props;
@@ -887,7 +886,7 @@ public class DefaultGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self   a generated closure
      * @param format a format string
      * @param values values referenced by the format specifiers in the format string
-     * @since 3.0.0
+     * @since 2.5.7
      */
     public static void printf(Closure self, String format, Object[] values) {
         Object owner = getClosureOwner(self);
@@ -904,7 +903,7 @@ public class DefaultGroovyMethods extends DefaultGroovyMethodsSupport {
      * @param self   a generated closure
      * @param format a format string
      * @param value  value referenced by the format specifier in the format string
-     * @since 3.0.0
+     * @since 2.5.7
      */
     public static void printf(Closure self, String format, Object value) {
         Object owner = getClosureOwner(self);
@@ -11891,20 +11890,32 @@ public class DefaultGroovyMethods extends DefaultGroovyMethodsSupport {
      * Reverse the items in an array. If mutate is true, the original array is modified in place and returned.
      * Otherwise, a new array containing the reversed items is produced.
      *
+     * <pre class="groovyTestCase">
+     * def array = [1,2,3] as Object[]
+     * def yarra = array.reverse(true)
+     * assert array == 3..1
+     * assert yarra == 3..1
+     *
+     * yarra = array.reverse(false)
+     * assert array == 3..1
+     * assert yarra == 1..3
+     * </pre>
+     *
      * @param self   an array
-     * @param mutate true if the array itself should be reversed in place and returned, false if a new array should be created
+     * @param mutate {@code true} if the array itself should be reversed in place, {@code false} if a new array should be created
      * @return an array containing the reversed items
+     *
      * @since 1.8.1
      */
-    @SuppressWarnings("unchecked")
     public static <T> T[] reverse(T[] self, boolean mutate) {
-        if (!mutate) {
-            return (T[]) toList(new ReverseListIterator<T>(Arrays.asList(self))).toArray();
+        List<T> list = Arrays.asList(self);
+        if (mutate) {
+            Collections.reverse(list);
+            return self;
         }
-        List<T> items = Arrays.asList(self);
-        Collections.reverse(items);
-        System.arraycopy(items.toArray(), 0, self, 0, items.size());
-        return self;
+        @SuppressWarnings("unchecked")
+        T[] result = (T[]) toList(new ReverseListIterator<>(list)).toArray();
+        return result;
     }
 
     /**
@@ -15216,6 +15227,32 @@ public class DefaultGroovyMethods extends DefaultGroovyMethodsSupport {
     }
 
     /**
+     * Compare a BigDecimal to another.
+     * A fluent api style alias for {@code compareTo}.
+     *
+     * @param left  a BigDecimal
+     * @param right a BigDecimal
+     * @return true if left is equal to or bigger than right
+     * @since 2.5.10
+     */
+    public static Boolean isAtLeast(BigDecimal left, BigDecimal right) {
+        return left.compareTo(right) >= 0;
+    }
+
+    /**
+     * Compare a BigDecimal to a String representing a number.
+     * A fluent api style alias for {@code compareTo}.
+     *
+     * @param left  a BigDecimal
+     * @param right a String representing a number
+     * @return true if left is equal to or bigger than the value represented by right
+     * @since 2.5.10
+     */
+    public static Boolean isAtLeast(BigDecimal left, String right) {
+        return isAtLeast(left, new BigDecimal(right));
+    }
+
+    /**
      * Power of a Number to a certain exponent. Called by the '**' operator.
      *
      * @param self     a Number
@@ -16694,6 +16731,17 @@ public class DefaultGroovyMethods extends DefaultGroovyMethodsSupport {
      * Iterates over the elements of an aggregate of items, starting from a
      * specified startIndex, and returns the index of the first item that matches the
      * condition specified in the closure.
+     * Example (aggregate is {@link java.util.concurrent.TimeUnit TimeUnit} enum values):
+     * <pre class="groovyTestCase">
+     * import java.util.concurrent.TimeUnit
+     * def nameStartsWithM = { it.name().startsWith('M') }
+     * def first  = TimeUnit.findIndexOf(nameStartsWithM)
+     * def second = TimeUnit.findIndexOf(first + 1, nameStartsWithM)
+     * def third  = TimeUnit.findIndexOf(second + 1, nameStartsWithM)
+     * Set units  = [first, second, third]
+     * assert units.size() == 3 // check size so as not to rely on order
+     * assert !units.contains(-1) // should have found MICROSECONDS, MILLISECONDS, MINUTES
+     * </pre>
      *
      * @param self       the iteration object over which to iterate
      * @param startIndex start matching from this index
@@ -16702,7 +16750,7 @@ public class DefaultGroovyMethods extends DefaultGroovyMethodsSupport {
      * @since 1.5.0
      */
     public static int findIndexOf(Object self, int startIndex, Closure condition) {
-        return findIndexOf(InvokerHelper.asIterator(self), condition);
+        return findIndexOf(InvokerHelper.asIterator(self), startIndex, condition);
     }
 
     /**
@@ -16805,6 +16853,15 @@ public class DefaultGroovyMethods extends DefaultGroovyMethodsSupport {
     /**
      * Iterates over the elements of an aggregate of items and returns
      * the index of the last item that matches the condition specified in the closure.
+     * Example (aggregate is {link java.util.concurrent.TimeUnit TimeUnit} enum values):
+     * <pre class="groovyTestCase">
+     * import java.util.concurrent.TimeUnit
+     * def nameStartsWithM = { it.name().startsWith('M') }
+     * def first = TimeUnit.findIndexOf(nameStartsWithM)
+     * def last  = TimeUnit.findLastIndexOf(nameStartsWithM)
+     * // should have found 2 unique index values for MICROSECONDS, MILLISECONDS, MINUTES
+     * assert first != -1 && last != -1 && first != last
+     * </pre>
      *
      * @param self      the iteration object over which to iterate
      * @param condition the matching condition
@@ -17330,7 +17387,8 @@ public class DefaultGroovyMethods extends DefaultGroovyMethodsSupport {
      * @throws GroovyRuntimeException if the metaclass can't be set for this class
      * @since 1.6.0
      */
-    public static MetaClass metaClass (Class self, Closure closure){
+    public static MetaClass metaClass(Class self, @ClosureParams(value=SimpleType.class, options="java.lang.Object")
+            @DelegatesTo(type="groovy.lang.ExpandoMetaClass.DefiningClosure", strategy=Closure.DELEGATE_ONLY) Closure closure) {
         MetaClassRegistry metaClassRegistry = GroovySystem.getMetaClassRegistry();
         MetaClass mc = metaClassRegistry.getMetaClass(self);
 
@@ -17377,7 +17435,8 @@ public class DefaultGroovyMethods extends DefaultGroovyMethodsSupport {
      * @throws GroovyRuntimeException if the metaclass can't be set for this object
      * @since 1.6.0
      */
-    public static MetaClass metaClass (Object self, Closure closure){
+    public static MetaClass metaClass(Object self, @ClosureParams(value=SimpleType.class, options="java.lang.Object")
+            @DelegatesTo(type="groovy.lang.ExpandoMetaClass.DefiningClosure", strategy=Closure.DELEGATE_ONLY) Closure closure) {
         MetaClass emc = hasPerInstanceMetaClass(self);
         if (emc == null) {
             final ExpandoMetaClass metaClass = new ExpandoMetaClass(self.getClass(), false, true);
