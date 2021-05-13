@@ -110,7 +110,7 @@ import org.rzo.yajsw.util.MyReentrantLock;
 import org.rzo.yajsw.util.Utils;
 import org.rzo.yajsw.util.VFSUtils;
 
-import sun.security.action.GetPropertyAction;
+//import sun.security.action.GetPropertyAction;
 
 import com.sun.jna.Platform;
 import com.sun.jna.PlatformEx;
@@ -239,8 +239,10 @@ public abstract class AbstractWrappedProcess implements WrappedProcess,
 
 	volatile int _minAppLogLines = MIN_PROCESS_LINES_TO_LOG;
 
-	static final String lineSeparator = ((String) AccessController
-			.doPrivileged(new GetPropertyAction("line.separator")));
+
+	
+	
+	static final String lineSeparator = System.lineSeparator(); //((String) AccessController.doPrivileged(new GetPropertyAction("line.separator")));
 
 	public Configuration getConfiguration()
 	{

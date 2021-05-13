@@ -30,6 +30,7 @@ dependencies {
     compile group: 'slf4j', 						name: 'slf4j', 								version: "$slf4j_version"
     compile group: 'yacron4j', 						name: 'yacron4j', 								version: "$yacron4j_version"
     compile group: 'joda-time', 					name: 'joda-time', 								version: "$joda_time_version"
+    compile group: 'permit-reflect', 				name: 'permit-reflect', 					version: "$permit_version"
 }
 
 println '---------------------------'

@@ -4,8 +4,9 @@ task createWrapper(type: Wrapper) {
 }
 
 ext {
-	projectHome = '../..'
+	projectHome = 'Z:/dev/yajsw2021' //'../..'
 	coreLibsDir = new File("$projectHome/lib/core").getAbsolutePath()
+	println "$coreLibsDir"
 	extendedLibsDir = new File("$projectHome/lib/extended").getAbsolutePath()
 // dependency versions
 
@@ -17,7 +18,7 @@ ext {
 	commons_lang_version 			= '3.8.1'
 	commons_logging_version 		= '1.1'
 	commons_vfs2_version 			= '2.2'
-	groovy_version 					= '2.5.14'
+	groovy_version 					= '4.0.0-alpha-3'
 	jna_version 					= '5.3.1'
 	platform_version 				= '5.3.1'
 	netty_version 					= 'all-4.1.63.Final'
@@ -30,6 +31,7 @@ ext {
 	commons_beanutils_version 		= '1.9.3'
 	yacron4j_version 				= '00.03'
 	joda_time_version 				= '2.7'
+	permit_version					= '0.4'
 }
 defaultTasks 'clean', 'build'
 
@@ -48,7 +50,7 @@ println ">> $coreLibsDir"
 // we use libs from local disk instead of public repository
 repositories {
     flatDir { 
-    dirs "$coreLibsDir/commons", "$coreLibsDir/jna", "$coreLibsDir/netty", 
+    dirs "$coreLibsDir/commons", "$coreLibsDir/jna", "$coreLibsDir/netty", "$coreLibsDir/permit", 
     "$coreLibsDir/yajsw", 
     "$extendedLibsDir/groovy", 
     "$extendedLibsDir/regex", 
@@ -65,8 +67,8 @@ repositories {
 
 
 
-sourceCompatibility = 1.7
-targetCompatibility = 1.7
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 //options.bootClasspath = "${System.getProperty('java6.home')}/jre/lib/rt.jar"
 version = ''
 

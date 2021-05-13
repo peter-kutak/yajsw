@@ -18,7 +18,9 @@ package org.rzo.yajsw.tools;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +33,13 @@ public class JCLParser
 	String _mainClass = null;
 	String _jar = null;
 	List<Integer> bs = new ArrayList<Integer>();
+	List<String> _modulePath = new ArrayList<String>();
+	String _module = null;
+	
+	static final Set<String> CPM_KEYS  = new HashSet<String>(Arrays.asList("-cp", "-classpath", "-jar", "--module-path", "-p", "--module", "-m"));
+	static final Set<String> CP_KEYS  = new HashSet<String>(Arrays.asList("-cp", "-classpath"));
+	static final Set<String> MP_KEYS  = new HashSet<String>(Arrays.asList("--module-path", "-p"));
+	static final Set<String> M_KEYS  = new HashSet<String>(Arrays.asList("--module", "-m"));
 
 	private JCLParser(String commandLine)
 	{
@@ -306,7 +315,8 @@ public class JCLParser
 		for (int i=1; i<s.size(); i++)
 			if ("-jar".equals(s.get(i)) )
 			{
-				_jar = s.get(i+1);
+				String x = s.get(i+1);
+				_jar = x;
 				_jar = _jar.replaceAll("\"", "");
 				_jar = _jar.trim();
 				posJar = i+1;
@@ -316,10 +326,12 @@ public class JCLParser
 		// parse cp
 		int posCp = -1;
 		for (int i=1; i<s.size(); i++)
-			if ((posCp == -1 && ("-cp".equals(s.get(i)) || "-classpath".equals(s.get(i)))) || (posCp != -1 && ";".equals(s.get(i))))
+		{
+			String cp = s.get(i);			
+			if ((posCp == -1 && (CP_KEYS.contains(cp))) || (posCp != -1 && File.pathSeparator.equals(cp)))
 			{
 				i = i+1;
-				String cp = s.get(i);
+				cp = s.get(i);
 				posCp = i;
 				String sep = File.pathSeparator;
 				String[] cpArr = cp.split(sep);
@@ -366,12 +378,90 @@ public class JCLParser
 				if (posCp != -1 && !";".equals(s.get(i+1)))
 					break;
 			}
+		}
+
+		// parse module-path
+		int posMp = -1;
+		for (int i=1; i<s.size(); i++)
+		{
+			String cp = s.get(i);			
+			if ((posMp == -1 && (MP_KEYS.contains(cp))) || (posMp != -1 && File.pathSeparator.equals(cp)))
+			{
+				i = i+1;
+				posMp = i;
+				cp = s.get(i);
+				String sep = File.pathSeparator;
+				String[] cpArr = cp.split(sep);
+				int k = 1;
+
+				boolean singleQuote = false;
+				for (String cc : cpArr)
+				{
+					if (cc.startsWith(" ") || cc.startsWith("\" "))
+						break;
+					cc = cc.trim();
+					if (k == cpArr.length)
+					{
+						if (singleQuote)
+							cc = cc.substring(0, cc.indexOf("\""));
+						else if (cc.startsWith("\""))
+						{
+							cc = cc.substring(1);
+							cc = cc.substring(0, cc.indexOf("\""));
+						}
+						cc = cc.replaceAll("\"", "").trim();
+						if (cc.length() != 0)
+							_modulePath.add(cc);
+						break;
+					}
+					if (!singleQuote && !cc.startsWith("\"") && cc.contains(" "))
+					{
+						cc = cc.substring(0, cc.indexOf(" "));
+						cc = cc.replaceAll("\"", "").trim();
+						if (cc.length() != 0)
+							_modulePath.add(cc);
+						break;
+					}
+					int q1 = cc.indexOf("\"");
+					if (!singleQuote && q1 != -1)
+					{
+						singleQuote = cc.lastIndexOf("\"") == q1;
+					}
+					cc = cc.replaceAll("\"", "").trim();
+					if (cc.length() != 0)
+						_modulePath.add(cc);
+					k++;
+				}
+				if (posMp != -1 && !";".equals(s.get(i+1)))
+					break;
+			}
+		}
 		
+		// parse module
+		int posM = -1;
+		for (int i=1; i<s.size(); i++)
+		{
+			String cp = s.get(i);			
+			if ((posM == -1 && (M_KEYS.contains(cp))))
+			{
+				i = i+1;
+				posM = i;
+				cp = s.get(i);
+				String[] x = cp.split("/");
+				_module = x[0];
+				if (x.length > 1)
+					_mainClass = x[1];
+				break;
+			}
+		}
+		
+
 		// parse options
 		int lastOpt = -1;
 		for (int i=1; i<s.size() ; i++)
 		{
-			if ("-jar".equals(s.get(i)) || "-cp".equals(s.get(i)) || "-classpath".equals(s.get(i)))
+			String opt = s.get(i);
+			if (CPM_KEYS.contains(opt))
 			{
 				i++;
 				continue;
@@ -379,16 +469,24 @@ public class JCLParser
 			if (!s.get(i).startsWith("-"))
 				break;
 			
-			String opt = s.get(i);
 			opt = opt.replaceAll("\"", "");
 			opt = opt.replaceAll("\\,", "\\\\,");
 			_vmOptions.add(opt);
 			lastOpt = i;
 		}
 		
+		// parse ModulePath
+		int posModulePath = -1;
+		
+		
 		// parse main class
 		int posMain = Math.max(lastOpt, posCp)+1;
-		if (_jar == null)
+		if (_mainClass != null)
+		{
+			_mainClass = _mainClass.replaceAll("\"", "");
+			_mainClass = _mainClass.trim();			
+		}
+		else if (_jar == null)
 		{
 			_mainClass = s.get(posMain);
 			_mainClass = _mainClass.replaceAll("\"", "");
@@ -396,7 +494,7 @@ public class JCLParser
 		}
 		
 		// parse args
-		int max = Math.max(posJar,  posMain)+1;
+		int max =    Math.max(Math.max(Math.max(Math.max(posJar,  posMain), posM), posMp), posCp)+1;
 		for (int i=max; i<s.size(); i++)
 		{
 			String arg = s.get(i);
@@ -447,10 +545,26 @@ public class JCLParser
 	{
 		return _jar;
 	}
+	
+	public List<String> getModuelPath()
+	{
+		return _modulePath;
+	}
+	
+	public String getModule()
+	{
+		return _module;
+	}
 
 	public static void main(String[] args)
 	{
 		String[] wcmds = new String[] {
+				"java --module-path out-jar -m com.jenkov.mymodule/com.jenkov.mymodule.Main",
+				"java -jar out-jar/com-jenkov-javafx.jar",
+				"java --module-path out;lib --module com.jenkov.mymodule/com.jenkov.mymodule.Main",
+				"java --module-path out;lib --module com.jenkov.mymodule",
+				"java -cp jars1;jars2  --module-path out;lib --module com.jenkov.mymodule",
+				"java -Xrs -jar \"Z:\\dev\\yajsw\\bat\\/..\\wrapper.jar\" -c conf/wrapper.conf       ",
 				"\"D:\\Oracle\\Middleware\\jdk16035\\bin\\java.exe\" -Xms32m -Xmx256m \"-Doracle.security.jps.config=./jps-config.xml\" \"-DODIMASTERDRIVER=weblogic.jdbc.sqlserver.SQLServerDriver\" \"-DODIMASTERURL=jdbc:weblogic:sqlserver://epmdev1sql:1433;databaseName=ODIMAST\" \"-DODIMASTERUSER=EPMSystem\" \"-DODIMASTERENCODEDPASS=fJyadv..2qt4hEuFOMRF80p\" \"-DODISECUWORKREP=WORKREP\" \"-DODISUPERVISOR=SUPERVISOR\" \"-DODISUPERVISORENCODEDPASS=aJyaN1oSPVlnKTHIz,mxu,o\" \"-DODIUSER=SUPERVISOR\" \"-DODIENCODEDPASS=aJyaN1oSPVlnKTHIz,mxu,o\" \"-DODIJMXPROTOCOL=rmi\" \"-Dorg.mortbay.log.class=oracle.odi.logging.AgentJettyLogger\" \"-Doracle.core.ojdl.logging.config.file=./ODI-logging-config.xml\" \"-Djava.util.logging.config.class=oracle.core.ojdl.logging.LoggingConfiguration\" -DLOGFILE=odiagent.log  -classpath \"D:\\Oracle\\product\\11.1.1\\OracleODI1\\oracledi\\agent\\lib.;D:\\Oracle\\product\\11.1.1\\OracleODI1\\oracledi\\agent\\drivers.;D:\\Oracle\\product\\11.1.1\\OracleODI1\\oracledi\\agent....\\odimisc\\;D:\\Oracle\\product\\11.1.1\\OracleODI1\\oracledi\\agent\\lib\\oracle.odi-agent-jse11.1.1.jar;D:\\Oracle\\product\\11.1.1\\OracleODI1\\oracledi\\agent....\\setup\\manual\\oracledi-sdk\\oracle.odi-sdk-jse11.1.1.jar;D:\\Oracle\\product\\11.1.1\\OracleODI1\\oracledi\\agent....\\modules\\oracle.jps11.1.1\\jps-manifest.jar;D:\\Oracle\\product\\11.1.1\\OracleODI1\\oracledi\\agent\\drivers\\;D:\\Oracle\\product\\11.1.1\\OracleODI1\\oracledi\\agent\\lib\\scripting\\;\"  oracle.odi.Agent  \"-MASTERDRIVER=weblogic.jdbc.sqlserver.SQLServerDriver\" \"-MASTERURL=jdbc:weblogic:sqlserver://epmdev1sql:1433;databaseName=ODIMAST\" \"-MASTERUSER=EPMSystem\" \"-MASTERENCODEDPASS=fJyadv..2qt4hEuFOMRF80p\" \"-WORKREPOSITORY=WORKREP\" \"-ODISUPERVISOR=SUPERVISOR\" \"-ODISUPERVISORENCODEDPASS=aJyaN1oSPVlnKTHIz,mxu,o\" \"-ODIUSER=SUPERVISOR\" \"-ODIENCODEDPASS=aJyaN1oSPVlnKTHIz,mxu,o\" \"-ODICONNECTIONRETRYCOUNT=0\" \"-ODICONNECTIONRETRYDELAY=7000\" \"-ODIKEYSTOREENCODEDPASS=\" \"-ODIKEYENCODEDPASS=\" \"-ODITRUSTSTOREENCODEDPASS=\" -NAME=odiagent1 -PORT=20920 ",
 				"\"C:\\Program Files\\Java\\jdk1.8.0_144\\bin\\java\"  -cp \"C:\\test\\yajsw-stable-12.15\\bat\\/../wrapper.jar\";\"C:\\test\\yajsw-stable-12.15\\bat\\/../wrapperApp.jar\" test.HelloWorld",
 				"\"C:\\Program Files\\Java\\jdk1.8.0_121\\jre\\bin\\java\" \"-Xms512m\" \"-Xmx1024m\" \"-Dfile.encoding=UTF-8\" \"-Dmail.mime.decodeparameters=true\" \"-Dnet.sf.ehcache.skipUpdateCheck=true\" \"-Djava.util.Arrays.useLegacyMergeSort=true\" \"-Xloggc:C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\\log/gc.log\" \"-verbose:gc\" \"-XX:+PrintGCDetails\" \"-XX:+PrintGCTimeStamps\" \"-cp\" \".;C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\\nxserver\\lib;C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\\bin\\bootstrap.jar;C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\\bin\\tomcat-juli.jar\" \"-Dnuxeo.home=C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\" \"-Dnuxeo.conf=C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\\bin\\nuxeo.conf\" \"-Dnuxeo.log.dir=C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\\log\" \"-Dnuxeo.data.dir=C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\\nxserver\\data\" \"-Dnuxeo.tmp.dir=C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\\tmp\" \"-Dnuxeo.mp.dir=C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\\packages\" \"-Djava.io.tmpdir=C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\\tmp\" \"-Djava.util.logging.manager=org.apache.juli.ClassLoaderLogManager\" \"-Dcatalina.base=C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\" \"-Dcatalina.home=C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\" \"-Djava.endorsed.dirs=C:\\test\\nuxeo-server-9.1-tomcat\\nuxeo-server-9.1-tomcat\\endorsed\" \"org.apache.catalina.startup.Bootstrap\" \"start\"",
@@ -462,7 +576,6 @@ public class JCLParser
 				"\"C:\\Program Files\\Java\\jdk1.6.0_20\\bin\\java\" -Dcom.sun.management.jmxremote.port=9875 -Dcom.sun.management.jmxremote.authenticate=true -Dcom.sun.management.jmxremote.login.config=virgo-kernel -Dcom.sun.management.jmxremote.access.file=\"C:\\ABC-~1.0-S\\config\\org.eclipse.virgo.kernel.jmxremote.access.properties\" -Djavax.net.ssl.keyStore=\"C:\\ABC-~1.0-S\\config\\keystore\" -Djavax.net.ssl.keyStorePassword=abc123 -Dcom.sun.management.jmxremote.ssl=true -Dcom.sun.management.jmxremote.ssl.need.client.auth=false -XX:+HeapDumpOnOutOfMemoryError -XX:ErrorFile=\"C:\\ABC-~1.0-S\\serviceability\\error.log\" -XX:HeapDumpPath=\"C:\\ABC-~1.0-S\\serviceability\\heap_dump.hprof\" -Djava.security.auth.login.config=\"C:\\ABC-~1.0-S\\config\\org.eclipse.virgo.kernel.authentication.config\" -Dorg.eclipse.virgo.kernel.authentication.file=\"C:\\ABC-~1.0-S\\config\\org.eclipse.virgo.kernel.users.properties\" -Djava.io.tmpdir=\"\"C:\\ABC-~1.0-S\\work\tmp\\\"\" -Dorg.eclipse.virgo.kernel.home=\"C:\\ABC-~1.0-S\" -Dorg.eclipse.equinox.console.jaas.file=\"C:\\ABC-~1.0-S\\config/store\" -Dssh.server.keystore=\"C:\\ABC-~1.0-S\\config/hostkey.ser\" -Dgosh.args=\"--nointeractive\" -classpath \"C:\\ABC-~1.0-S\\lib\\com.springsource.javax.transaction-1.1.0.jar;C:\\ABC-~1.0-S\\lib\\com.springsource.org.apache.mina.core-2.0.2.jar;C:\\ABC-~1.0-S\\lib\\com.springsource.org.apache.sshd.core-0.5.0.jar;C:\\ABC-~1.0-S\\lib\\com.springsource.slf4j.api-1.6.1.jar;C:\\ABC-~1.0-S\\lib\\org.apache.felix.gogo.runtime-0.8.0.v201107131313.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.equinox.cm-1.0.300.v20101204.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.equinox.console.supportability-1.0.0.201108021516.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.osgi-3.7.0.v20110613.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.osgi.services-3.3.0.v20110110.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.virgo.kernel.authentication-3.0.2.RELEASE.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.virgo.kernel.shutdown-3.0.2.RELEASE.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.virgo.osgi.console-3.0.2.RELEASE.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.virgo.osgi.extensions.equinox-3.0.2.RELEASE.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.virgo.osgi.launcher-3.0.2.RELEASE.jar\" org.eclipse.virgo.osgi.launcher.Launcher -config \"C:\\ABC-~1.0-S\\lib\\org.eclipse.virgo.kernel.launch.properties\" -Forg.eclipse.virgo.kernel.home=\"C:\\ABC-~1.0-S\" -Forg.eclipse.virgo.kernel.config=\"C:\\ABC-~1.0-S\\config\" -Fosgi.configuration.area=\"C:\\ABC-~1.0-S\\work\\osgi\\configuration\" -Fosgi.java.profile=\"file:C:\\ABC-~1.0-S\\lib\\java6-server.profile\"",
 				"\"C:\\Program Files\\Java\\jdk1.6.0_20\\bin\\java\" -Dcom.sun.management.jmxremote.port=9875 -Dcom.sun.management.jmxremote.authenticate=true -Dcom.sun.management.jmxremote.login.config=virgo-kernel -Dcom.sun.management.jmxremote.access.file=\"C:\\ABC-~1.0-S\\config\\org.eclipse.virgo.kernel.jmxremote.access.properties\" -Djavax.net.ssl.keyStore=\"C:\\ABC-~1.0-S\\config\\keystore\" -Djavax.net.ssl.keyStorePassword=abc123 -Dcom.sun.management.jmxremote.ssl=true -Dcom.sun.management.jmxremote.ssl.need.client.auth=false -XX:+HeapDumpOnOutOfMemoryError -XX:ErrorFile=\"C:\\ABC-~1.0-S\\serviceability\\error.log\" -XX:HeapDumpPath=\"C:\\ABC-~1.0-S\\serviceability\\heap_dump.hprof\" -Djava.security.auth.login.config=\"C:\\ABC-~1.0-S\\config\\org.eclipse.virgo.kernel.authentication.config\" -Dorg.eclipse.virgo.kernel.authentication.file=\"C:\\ABC-~1.0-S\\config\\org.eclipse.virgo.kernel.users.properties\" -Djava.io.tmpdir=\"C:\\ABC-~1.0-S\\work\tmp\\\" -Dorg.eclipse.virgo.kernel.home=\"C:\\ABC-~1.0-S\" -Dorg.eclipse.equinox.console.jaas.file=\"C:\\ABC-~1.0-S\\config/store\" -Dssh.server.keystore=\"C:\\ABC-~1.0-S\\config/hostkey.ser\" -Dgosh.args=\"--nointeractive\" -classpath \"C:\\ABC-~1.0-S\\lib\\com.springsource.javax.transaction-1.1.0.jar;C:\\ABC-~1.0-S\\lib\\com.springsource.org.apache.mina.core-2.0.2.jar;C:\\ABC-~1.0-S\\lib\\com.springsource.org.apache.sshd.core-0.5.0.jar;C:\\ABC-~1.0-S\\lib\\com.springsource.slf4j.api-1.6.1.jar;C:\\ABC-~1.0-S\\lib\\org.apache.felix.gogo.runtime-0.8.0.v201107131313.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.equinox.cm-1.0.300.v20101204.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.equinox.console.supportability-1.0.0.201108021516.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.osgi-3.7.0.v20110613.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.osgi.services-3.3.0.v20110110.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.virgo.kernel.authentication-3.0.2.RELEASE.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.virgo.kernel.shutdown-3.0.2.RELEASE.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.virgo.osgi.console-3.0.2.RELEASE.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.virgo.osgi.extensions.equinox-3.0.2.RELEASE.jar;C:\\ABC-~1.0-S\\lib\\org.eclipse.virgo.osgi.launcher-3.0.2.RELEASE.jar\" org.eclipse.virgo.osgi.launcher.Launcher -config \"C:\\ABC-~1.0-S\\lib\\org.eclipse.virgo.kernel.launch.properties\" -Forg.eclipse.virgo.kernel.home=\"C:\\ABC-~1.0-S\" -Forg.eclipse.virgo.kernel.config=\"C:\\ABC-~1.0-S\\config\" -Fosgi.configuration.area=\"C:\\ABC-~1.0-S\\work\\osgi\\configuration\" -Fosgi.java.profile=\"file:C:\\ABC-~1.0-S\\lib\\java6-server.profile\"",
 				"\"java\" -cp \"C:\\Program Files\\yajsw-alpha-9.5\\bat\\/../wrapper.jar\" test.HelloWorld",
-				"java -Xrs -jar \"Z:\\dev\\yajsw\\bat\\/..\\wrapper.jar\" -c conf/wrapper.conf       ",
 				"java -cp wrapper.jar -Xrs x.Test -c conf/wrapper.conf       ",
 				"\"java\" -cp \"C:\\Program Files\\yajsw-alpha-9.5\\bat\\/../wrapper.jar\" test.HelloWorld start \n ",
 				"\"java\"  test.HelloWorld",
@@ -496,12 +609,16 @@ public class JCLParser
 			System.out.println(p.getJava());
 			System.out.println(" jar:");
 			System.out.println(p.getJar());
+			System.out.println(" module:");
+			System.out.println(p.getModule());
 			System.out.println(" main class:");
 			System.out.println(p.getMainClass());
 			System.out.println(" args:");
 			System.out.println(p.getArgs());
 			System.out.println(" classpath:");
 			System.out.println(p.getClasspath());
+			System.out.println(" module-path:");
+			System.out.println(p.getModuelPath());
 			System.out.println(" options:");
 			System.out.println(p.getVmOptions());
 		}

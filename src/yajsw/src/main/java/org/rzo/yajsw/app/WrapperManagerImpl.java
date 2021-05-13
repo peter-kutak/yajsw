@@ -149,6 +149,9 @@ public class WrapperManagerImpl implements WrapperManager, Constants,
 
 	/** The main method. */
 	Method mainMethod = null;
+	String mainClassName = null;
+	String module = null;
+	List<String> modulePath = null;
 
 	/** The main method args. */
 	String[] mainMethodArgs = null;
@@ -314,28 +317,39 @@ public class WrapperManagerImpl implements WrapperManager, Constants,
 		}
 		try
 		{
-			String mainClassName = config
+			mainClassName = config
 					.getString("wrapper.java.app.mainclass");
 			String jarName = config.getString("wrapper.java.app.jar");
+			Configuration mp = config.subset("wrapper.java.app.module-path");
+			if (mp != null && !mp.isEmpty())
+			{
+				modulePath = new ArrayList<String>();
+				Iterator<String> it = mp.getKeys();
+				for (;it.hasNext();)
+				{
+					modulePath.add(mp.getString(it.next()));
+				}
+			}
+			module = config.getString("wrapper.java.app.module", null);
 			String groovyScript = config.getString("wrapper.groovy");
 			if (mainClassName == null && jarName == null
-					&& groovyScript == null)
+					&& groovyScript == null && module == null)
 				mainClassName = config.getString("wrapper.app.parameter.1");
 			if (_debug > 1)
-				System.out.println("mainClass/jar/script: " + mainClassName
-						+ "/" + jarName + "/" + groovyScript);
+				System.out.println("mainClass/jar/script/module: " + mainClassName
+						+ "/" + jarName + "/" + groovyScript+"/"+module);
 			if (jarName == null && mainClassName == null
-					&& groovyScript == null)
+					&& groovyScript == null && module == null)
 			{
 				System.out
-						.println("missing main class name or jar file or groovy file. please check configuration");
+						.println("missing main class name or jar file or groovy file or module. please check configuration");
 				return;
 			}
-			if (jarName != null)
+			if (jarName != null && module == null)
 			{
 				mainMethod = loadJar(jarName);
 			}
-			else if (mainClassName != null)
+			else if (mainClassName != null && module == null)
 				try
 				{
 					Class cls = ClassLoader.getSystemClassLoader().loadClass(
@@ -793,6 +807,21 @@ public class WrapperManagerImpl implements WrapperManager, Constants,
 	public Method getMainMethod()
 	{
 		return mainMethod;
+	}
+	
+	public String getMainClassName() 
+	{
+		return mainClassName;
+	}
+	
+	public String getModule()
+	{
+		return module;
+	}
+	
+	public List<String> getModulePath()
+	{
+		return modulePath;
 	}
 
 	/*

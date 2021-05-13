@@ -352,6 +352,7 @@ public class HelloWorld
 		}
 
 		System.out.println("myenv " + System.getProperty("myenv"));
+		
 		if (WrapperJVMMain.WRAPPER_MANAGER != null)
 			System.out.println("wrapper property: "
 					+ WrapperJVMMain.WRAPPER_MANAGER.getProperties()

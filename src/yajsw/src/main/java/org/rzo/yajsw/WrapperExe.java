@@ -46,6 +46,7 @@ import org.rzo.yajsw.wrapper.WrappedProcessFactory;
 import org.rzo.yajsw.wrapper.WrappedProcessList;
 import org.rzo.yajsw.wrapper.WrappedService;
 
+import com.nqzero.permit.Permit;
 import com.sun.jna.PlatformEx;
 
 // TODO: Auto-generated Javadoc
@@ -107,6 +108,7 @@ public class WrapperExe
 	 */
 	public static void main(String[] args)
 	{
+		Permit.godMode();
 		System.out.println("YAJSW: " + YajswVersion.YAJSW_VERSION);
 		System.out.println("OS   : " + YajswVersion.OS_VERSION);
 		System.out.println("JVM  : " + YajswVersion.JAVA_VERSION);
