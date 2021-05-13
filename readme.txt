@@ -1,12 +1,12 @@
-yajsw-stable-12.16
+yajsw-alpha-13.00
 
-bug and security update
+    * Support for java 8+
+    * support for running modules (jpms)
+    * genConfig support for command lines with -p and -m 
 
-    * Security update: groovy, velocity, netty, CryptoConstants
-    * logging in GInterpolator
-    * NPE in DateFileHandler
-    * error parsing java command line
-    * sigar crashes jdk11 -> revert to jna
-    * bug: groovy script deadlock
+Notes:
+this is the first alpha release to support java 8+ and jpms.
+pls test it with your current applications, with java 9+ and modules.
 
-Note: this is the last release to support java 1.7. The next relase will support JDK8 - JDK 14
+for running a module see jpms support in the documentation
+to build yajsw see the note in the documentation.
